@@ -90,7 +90,7 @@ source ${TFILE}
 [[ "${tls_enabled}" == "false" ]] && PROTO="http" || PROTO="https"
 [[ -z "${http_address}" ]] && http_address=${bind_host}:${bind_port}
 HOST=${http_address%:*}
-[[ "${HOST}" == "0.0.0.0" ]] && HOST=$(uci get system.@system[0].hostname).$(uci get dhcp.@dnsmasq[0].domain)
+[[ "${HOST}" == "0.0.0.0" ]] && HOST=$(uci get network.lan.ipaddr)
 HOST=$(echo ${HOST} | awk '{print tolower($0)}')
 PORT=${http_address##*:}
 

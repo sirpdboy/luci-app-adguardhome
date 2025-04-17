@@ -8,7 +8,7 @@ function renderStatus(status, agh_config) {
 	var spanTemp = '<span style="color:%s"><strong>%s %s</strong></span>';
 	var renderHTML;
 	if (status.running) {
-		var button = String.format('&#160;<a class="btn cbi-button" href="%s" target="_blank" rel="noreferrer noopener">%s</a>',
+		var button = ' (' + agh_config.web_url + ')'+ String.format('&#160;<a class="btn cbi-button" href=" %s " target="_blank" rel="noreferrer noopener"> %s </a>',
 			agh_config.web_url, _('Open Web Interface'));
 		renderHTML = spanTemp.format('green', _('adguardhome'), _('RUNNING')) + button;
 	} else {

@@ -96,7 +96,7 @@ msgid "Running"
 msgstr "运行否"
 
 msgid "Protection enabled"
-msgstr "保护已启用"
+msgstr "保护启用否"
 
 msgid "Statistics period (days)"
 msgstr "统计周期（天）"
@@ -108,7 +108,10 @@ msgid "Web interface"
 msgstr "web界面"
 
 msgid "Bootstrap DNS addresses"
-msgstr "Bootstrap DNS地址"
+msgstr "Bootstrap查询DNS地址"
+
+msgid "Upstream DNS addresses"
+msgstr "上游DNS地址"
 
 msgid "DNS blocks"
 msgstr "DNS阻止"
