@@ -20,6 +20,7 @@
 					"exec"
 				],
 				"/etc/init.d/dnsmasq": [ "exec" ],
+				"/usr/libexec/rpcd/luci.adguardhome": [ "exec" ],
 				"/etc/init.d/firewall": [ "exec" ]
 			}
 		},
