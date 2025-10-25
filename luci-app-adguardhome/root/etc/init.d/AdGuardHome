@@ -7,6 +7,7 @@ STOP=01
 
 ipt=$(command -v iptables-legacy || command -v iptables)
 ip6t=$(command -v ip6tables-legacy || command -v ip6tables)
+bin_nft=$(command -v nft || which nft) 
 CONFIGURATION=AdGuardHome
 CRON_FILE=/etc/crontabs/root
 EXTRA_COMMANDS="do_redirect testbackup test_crontab force_reload isrunning"
@@ -65,36 +66,48 @@ set_iptable()
 {
 	local ipv6_server=$1
 	local tcp_server=$2
+    if [ -n "$bin_nft" ]; then
+        $bin_nft add table inet adguardhome 2>/dev/null || true
+        $bin_nft add chain inet adguardhome prerouting "{ type nat hook prerouting priority -110; policy accept; }" 2>/dev/null || true
+        $bin_nft add rule inet adguardhome prerouting "meta nfproto { ipv4, ipv6 } udp dport 53 counter redirect to $AdGuardHome_PORT comment \"ADGUARDHOME HIJACK\"" 2>/dev/null || true
+    fi
 	uci -q batch <<-EOF >/dev/null 2>&1
-	delete firewall.AdGuardHome
-	set firewall.AdGuardHome=include
-	set firewall.AdGuardHome.type=script
-	set firewall.AdGuardHome.path=/usr/share/AdGuardHome/firewall.start
-	set firewall.AdGuardHome.reload=1
-	commit firewall
-EOF
+		delete firewall.AdGuardHome
+		set firewall.AdGuardHome=include
+		set firewall.AdGuardHome.type=script
+		set firewall.AdGuardHome.path=/usr/share/AdGuardHome/firewall.start
+		set firewall.AdGuardHome.reload=1
+		commit firewall
+	EOF
 
-	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
-	for IP in $IPS
-	do
-		if [ "$tcp_server" == "1" ]; then
-			$ipt -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-		fi
-		$ipt -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-	done
-
-	if [ "$ipv6_server" == 0 ]; then
-		return
+	
+  	if [ -n "$ipt" ] ;then
+	#IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+	IPS=$(ip -o addr show scope global | grep -v inet6 | awk '{split($4, a, "/"); print a[1]}')
+		for IP in $IPS
+		do
+			if [ "$tcp_server" == "1" ]; then
+				$ipt -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+			fi
+			$ipt -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		done
 	fi
 
-	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
-	for IP in $IPS
-	do
-		if [ "$tcp_server" == "1" ]; then
-			$ip6t -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		if [ "$ipv6_server" == 0 ]; then
+			return
 		fi
-		$ip6t -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-	done
+
+  	if [ -n "$ip6t" ] ;then
+	#IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+	IPS=$(ip -o addr show scope global | awk '/inet6/ && !/fe80::/ && !/::1/ {split($4, a, "/"); print a[1]}')
+		for IP in $IPS
+		do
+			if [ "$tcp_server" == "1" ]; then
+				$ip6t -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+			fi
+			$ip6t -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		done
+	fi
 }
 
 clear_iptable()
@@ -105,7 +118,10 @@ clear_iptable()
 EOF
 	local OLD_PORT="$1"
 	local ipv6_server=$2
-	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+	
+  	if [ -n "$ipt" ] ;then
+	#IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+	IPS=$(ip -o addr show scope global | grep -v inet6 | awk '{split($4, a, "/"); print a[1]}')
 	for IP in $IPS
 	do
 		$ipt -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
@@ -115,13 +131,22 @@ EOF
 	if [ "$ipv6_server" == 0 ]; then
 		return
 	fi
+	fi
+
+  	if [ -n "$ip6t" ] ;then
 	echo "warn ip6tables nat mod is needed"
-	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+	#IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+	IPS=$(ip -o addr show scope global | awk '/inet6/ && !/fe80::/ && !/::1/ {split($4, a, "/"); print a[1]}')
 	for IP in $IPS
 	do
 		$ip6t -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
 		$ip6t -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
 	done
+	fi
+	
+if [ -n "$bin_nft" ]; then
+    nft delete rule inet adguardhome prerouting handle $(nft -a list chain inet adguardhome prerouting | grep "redirect to :$OLD_PORT" | awk '{print $NF}')
+fi	    
 }
 
 service_triggers() {

@@ -14,18 +14,17 @@ m:section(SimpleSection).template  = "AdGuardHome/AdGuardHome_status"
 s = m:section(TypedSection, "AdGuardHome")
 s.anonymous=true
 s.addremove=false
----- enable
+
 o = s:option(Flag, "enabled", translate("Enable"))
 o.default = 0
 o.optional = false
----- httpport
+
 o =s:option(Value,"httpport",translate("Browser management port"))
 o.placeholder=3000
 o.default=3000
 o.datatype="port"
 o.optional = false
-o.description = translate("<input type='button' style='width:210px;border-color:Teal;text-align:center;font-weight:bold;color:red;background: #ffc800;' value='AdGuardHome Web:" .. httpport .. "' onclick=\"window.open('http://'+window.location.hostname+':" .. httpport .. "')\"/>")
----- update warning not safe
+
 local binmtime=uci:get("AdGuardHome","AdGuardHome","binmtime") or "0"
 local e=""
 if not fs.access(configpath) then e = e .. " " .. translate("no config") end
@@ -35,8 +34,7 @@ else
 	local version=uci:get("AdGuardHome","AdGuardHome","version")
 	local testtime=fs.stat(binpath,"mtime")
 	if testtime~=tonumber(binmtime) or version==nil then
-        -- local tmp=luci.sys.exec(binpath.." -c /dev/null --check-config 2>&1| grep -m 1 -E 'v[0-9.]+' -o")
-        -- version=string.sub(tmp, 1, -2)
+
         version = luci.sys.exec(string.format("echo -n $(%s --version 2>&1 | awk -F 'version ' '{print $2}' | awk -F ',' '{print $1}')", binpath))
         if version == "" then version = "core error" end
         uci:set("AdGuardHome", "AdGuardHome", "version", version)
@@ -55,10 +53,10 @@ o.inputtitle=translate("Update core version")
 o.template = "AdGuardHome/AdGuardHome_check"
 o.showfastconfig=(not fs.access(configpath))
 o.description = string.format(translate("Current core version:") .. "<strong><font id='updateversion' color='green'>%s </font></strong>", e)
----- port warning not safe
-local port=luci.sys.exec("awk '/  port:/{printf($2);exit;}' "..configpath.." 2>nul")
+
+local port=luci.sys.exec("grep -A 5 '^dns:' "..configpath.." | grep 'port:' | awk '{print $2}'  2>nul")
 if (port=="") then port="?" end
----- Redirect
+
 o = s:option(ListValue, "redirect", port..translate("Redirect"), translate("AdGuardHome redirect mode"))
 o.placeholder = "none"
 o:value("none", translate("none"))
@@ -67,7 +65,7 @@ o:value("redirect", translate("Redirect 53 port to AdGuardHome"))
 o:value("exchange", translate("Use port 53 replace dnsmasq"))
 o.default     = "none"
 o.optional = true
----- bin path
+
 o = s:option(Value, "binpath", translate("Bin Path"), translate("AdGuardHome Bin path if no bin will auto download"))
 o.default     = "/usr/bin/AdGuardHome"
 o.datatype = "string"

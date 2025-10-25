@@ -39,7 +39,7 @@ msgid "Enable"
 msgstr "启用"
 
 msgid "Browser management port"
-msgstr "网页管理端口:"
+msgstr "网页管理端口"
 
 msgid "Upgrade Core"
 msgstr "更新核心"

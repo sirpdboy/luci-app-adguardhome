@@ -97,97 +97,20 @@ filters:
     name: EasyList China-EasyList针对国内的补充规则
     id: 139789121
   - enabled: true
-    url: https://anti-ad.net/adguard.txt
+    url: https://anti-ad.net/easylist.txt
     name: anti-AD命中率最高列表
-    id: 139789122
+    id: 139789221
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+    name: AdGuard DNS filter
+    id: 139789332
   - enabled: false
-    url: https://raw.iqiq.io/banbendalao/ADgk/master/ADgk.txt
-    name: ADgk去广告easylistchina补充规则
-    id: 139789131
-  - enabled: false
-    url: https://raw.iqiq.io/banbendalao/ADgk/master/kill-baidu-ad.txt
-    name: ADgk百度广告过滤
-    id: 139789133
-  - enabled: false
-    url: https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext
-    name: Peter Lowe’s Ad and tracking server list​
-    id: 139789152
-  - enabled: false
-    url: https://easylist.to/easylist/fanboy-social.txt
-    name: Fanboy's Social Blocking List
-    id: 139789153
-  - enabled: false
-    url: https://easylist.to/easylist/fanboy-annoyance.txt
-    name: Fanboy's Annoyance List
-    id: 139789154
-  - enabled: false
-    url: https://secure.fanboy.co.nz/fanboy-cookiemonster.txt
-    name: EasyList Cookie List
-    id: 139789155
-  - enabled: false
-    url: https://fanboy.co.nz/fanboy-antifacebook.txt
-    name: Anti-Facebook List
-    id: 139789161
-  - enabled: false
-    url: https://filters.adtidy.org/extension/ublock/filters/14.txt
-    name: AdGuard Annoyances filter
-    id: 139789162
-  - enabled: false
-    url: https://www.fanboy.co.nz/enhancedstats.txt
-    name: Fanboy's Enhanced Tracking List
-    id: 139789164
-  - enabled: false
-    url: https://filters.adtidy.org/extension/ublock/filters/3.txt
-    name: AdGuard Tracking Protection filter
-    id: 139789165
-  - enabled: false
-    url: https://easylist.to/easylist/easylist.txt
-    name: EasyList
-    id: 139789171
-  - enabled: false
-    url: https://filters.adtidy.org/extension/ublock/filters/11.txt
-    name: AdGuard Mobile Ads filter
-    id: 139789172
-  - enabled: false
-    url: https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt
-    name: AdGuard Base filter
-    id: 139789173
-  - enabled: false
-    url: https://easylist-downloads.adblockplus.org/antiadblockfilters.txt
-    name: Adblock Warning Removal List
-    id: 139789174
-  - enabled: false
-    url: https://fanboy.co.nz/fanboy-problematic-sites.txt
-    name: Fanboy's problematic-sites
-    id: 139789175
-  - enabled: false
-    url: https://adaway.org/hosts.txt
-    name: Adaway HOST
-    id: 139789187
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
+    name: AdAway Default Blocklist
+    id: 149789121
 whitelist_filters: []
 user_rules:
-  - '@@||taobao.com^$important'
-  - '@@||tmall.com^$important'
-  - '@@||jd.com^important'
-  - '@@||flyme.cn^$important'
-  - '@@||meizu.com^$important'
-  - '@@||wl.jd.com^$important'
-  - '@@||flydigi.com^'
-  - '@@||pv.sohu.com^$important'
-  - /googleads.$~script,domain=~googleads.github.io
-  - /pagead/lvz?
-  - '||google.com/pagead/'
-  - '||static.doubleclick.net^$domain=youtube.com'
-  - '||youtube.com/get_midroll_'
-  - '||5hz.org^'
-  - '@@||000714.xyz^'
-  - '@@||blueskyxn.com^'
-  - '||topnewsfeeds.net^'
-  - '||nbryb.com^'
-  - '||superbdolly.com^'
-  - '||salutationcheerlessdemote.com^'
-  - '||buildingdoodlesquare.com^'
-  - '||colonistnobilityheroic.com^'
+
 dhcp:
   enabled: false
   interface_name: ""

@@ -1,3 +1,7 @@
+#模板用户名为 admin 密码为 admin
+#The username is admin and the password is admin.
+#提交就可以直接用的配置模板文件
+#a template config can be use with a apply
 bind_host: 0.0.0.0
 bind_port: 3000
 beta_bind_port: 0
@@ -87,11 +91,19 @@ filters:
 - enabled: true
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
   name: AdGuard DNS filter
-  id: 1628750870
+  id: 1128750870
 - enabled: true
   url: https://anti-ad.net/easylist.txt
   name: 'CHN: anti-AD'
-  id: 1628750871
+  id: 1128750871
+- enabled: true
+  url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+  name: AdGuard DNS filter
+  id: 1128751871
+- enabled: false
+  url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
+  name: AdAway Default Blocklist
+  id: 1128752871
 whitelist_filters: []
 user_rules:
 - '@@||taobao.com^$important'
