@@ -3,7 +3,7 @@
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 update_mode=$1
 binpath=$(uci get AdGuardHome.AdGuardHome.binpath)
-if [[ -z ${binpath} ]]; then
+if [ -z "$binpath" ]; then
 	uci set AdGuardHome.AdGuardHome.binpath="/tmp/AdGuardHome/AdGuardHome"
 	binpath="/tmp/AdGuardHome/AdGuardHome"
 fi
@@ -64,7 +64,7 @@ Check_Updates(){
 		Current_Version="未知"
 	fi
 	[[ -z ${Current_Version} ]] && Current_Version="未知"
-	echo -e "\n执行文件: ${binpath%/*}\n\n正在检查更新, 请耐心等待 ..."
+	echo -e "\n执行文件: ${binpath}\n正在检查更新, 请耐心等待 ..."
 	echo -e "\n当前 AdGuardHome 版本: ${Current_Version}\n云端 AdGuardHome 版本: ${Cloud_Version}"
 	if [[ ! "${Cloud_Version}" == "${Current_Version}" || "$1" == force ]]; then
 		Update_Core
@@ -76,7 +76,9 @@ Check_Updates(){
 }
 
 UPX_Compress(){
-	GET_Arch
+	Arch_upx=$(GET_Arch )
+         # https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
+	upx_latest_ver="$(${_Downloader} https://api.github.com/repos/upx/upx/releases/latest 2>/dev/null | grep -E 'tag_name' | grep -E  '[0-9.]+' -o 2>/dev/null)"
 	upx_name="upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz"
 	echo -e "开始下载 ${upx_name} ...\n"
 	$Downloader /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz "https://github.com/upx/upx/releases/download/v${upx_latest_ver}/${upx_name}"
@@ -97,7 +99,7 @@ Update_Core(){
 	rm -r /tmp/AdGuardHome_Update > /dev/null 2>&1
 	mkdir -p "/tmp/AdGuardHome_Update"
 	
-	GET_Arch
+	Arch=$(GET_Arch )
 	eval link=$(uci get AdGuardHome.AdGuardHome.update_url 2>/dev/null)
 	echo -e "下载链接:${link}"
 	echo -e "文件名称:${link##*/}"
@@ -133,6 +135,7 @@ Update_Core(){
 	fi
 	/etc/init.d/AdGuardHome stop > /dev/null 2>&1
 	echo -e "\n移动 AdGuardHome 核心文件到 ${binpath%/*} ..."
+	rm -rf ${binpath}
 	mv -f ${downloadbin} ${binpath} > /dev/null 2>&1
 	if [[ ! -s ${binpath} && $? != 0 ]]; then
 		echo -e "AdGuardHome 核心移动失败!\n可能是设备空间不足导致, 请尝试开启 UPX 压缩, 或更改 [执行文件路径] 为 /tmp/AdGuardHome" 
@@ -152,51 +155,54 @@ Update_Core(){
 GET_Arch() {
 	Archt="$(opkg info kernel | grep Architecture | awk -F "[ _]" '{print($2)}')"
 	case "${Archt}" in
-	i386)
-		Arch=i386
-	;;
-	i686)
-		Arch=i386
+	"i386")
+		Arch="386"
 		;;
-	x86)
-		Arch=amd64
+	"i686")
+		Arch="386"
+		;;
+	"x86")
+		Arch="amd64"
+		;;
+	"mipsel")
+		Arch="mipsle"
 	;;
-	mipsel)
-		Arch=mipsle_softfloat
+	"mips64el")
+		Arch="mips64le"
+		Arch="mipsle"
+		echo -e "mips64el use $Arch may have bug"
 	;;
-	mips)
-		Arch=mips_softfloat
+	"mips")
+		Arch="mips"
 	;;
-	mips64el)
-		Arch=mips64le_softfloat
+	"mips64")
+		Arch="mips64"
+		Arch="mips"
+		echo -e "mips64 use $Arch may have bug"
 	;;
-	mips64)
-		Arch=mips64_softfloat
-	;;
-	arm)
-		Arch=arm
-	;;
-	armeb)
-		Arch=armeb
-	;;
-	aarch64)
-		Arch=arm64
-	;;
-	*)
-		echo -e "\nAdGuardHome 暂不支持当前的设备架构: [${Archt}]!" 
+	"arm")
+		Arch="arm"
+		;;
+	"aarch64")
+		Arch="arm64"
+		;;
+	"powerpc")
+		Arch="ppc"
+		echo -e "error not support $Archt"
 		EXIT 1
-	esac
-	case "${Archt}" in
-	mipsel)
-		Arch_upx="mipsel"
-		upx_latest_ver="3.95"
-	;;
+		;;
+	"powerpc64")
+		Arch="ppc64"
+		echo -e "error not support $Archt"
+		EXIT 1
+		;;
+
 	*)
-		Arch_upx="${Arch}"
-		upx_latest_ver="$(${_Downloader} https://api.github.com/repos/upx/upx/releases/latest 2>/dev/null | grep -E 'tag_name' | grep -E  '[0-9.]+' -o 2>/dev/null)"
-	
+		echo -e "error not support $Archt if you can use offical release please issue a bug"
+		EXIT 1
+		;;
 	esac
-	echo -e "\n当前设备架构: ${Arch}\n"
+        echo  "$Arch"
 }
 
 EXIT(){

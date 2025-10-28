@@ -15,17 +15,21 @@ s = m:section(TypedSection, "AdGuardHome")
 s.anonymous=true
 s.addremove=false
 
-o = s:option(Flag, "enabled", translate("Enable"))
+---- Basic Settings ----
+s:tab("basic", translate("Basic Settings"))
+
+o = s:taboption("basic", Flag, "enabled", translate("Enable"))
 o.default = 0
 o.optional = false
 
-o =s:option(Value,"httpport",translate("Browser management port"))
+o = s:taboption("basic", Value,"httpport",translate("Browser management port"))
 o.placeholder=3000
 o.default=3000
 o.datatype="port"
 o.optional = false
 
 local binmtime=uci:get("AdGuardHome","AdGuardHome","binmtime") or "0"
+
 local e=""
 if not fs.access(configpath) then e = e .. " " .. translate("no config") end
 if not fs.access(binpath) then
@@ -44,11 +48,11 @@ else
 	e=version..e
 end
 
-o = s:option(ListValue, "core_version", translate("Core Version"))
+o = s:taboption("basic", ListValue, "core_version", translate("Core Version"))
 o:value("latest", translate("Latest Version"))
 o:value("beta", translate("Beta Version"))
 o.default = "latest"
-o = s:option(Button, "restart", translate("Upgrade Core"))
+o = s:taboption("basic", Button, "restart", translate("Upgrade Core"))
 o.inputtitle=translate("Update core version")
 o.template = "AdGuardHome/AdGuardHome_check"
 o.showfastconfig=(not fs.access(configpath))
@@ -57,7 +61,7 @@ o.description = string.format(translate("Current core version:") .. "<strong><fo
 local port=luci.sys.exec("grep -A 5 '^dns:' "..configpath.." | grep 'port:' | awk '{print $2}'  2>nul")
 if (port=="") then port="?" end
 
-o = s:option(ListValue, "redirect", port..translate("Redirect"), translate("AdGuardHome redirect mode"))
+o = s:taboption("basic", ListValue, "redirect", port..translate("Redirect"), translate("AdGuardHome redirect mode"))
 o.placeholder = "none"
 o:value("none", translate("none"))
 o:value("dnsmasq-upstream", translate("Run as dnsmasq upstream server"))
@@ -65,8 +69,22 @@ o:value("redirect", translate("Redirect 53 port to AdGuardHome"))
 o:value("exchange", translate("Use port 53 replace dnsmasq"))
 o.default     = "none"
 o.optional = true
+---- chpass
+o = s:taboption("basic",Value, "hashpass", translate("Change management password"), translate("Press load culculate model and culculate finally save/apply"))
+o.default     = ""
+o.datatype    = "string"
+o.template = "AdGuardHome/AdGuardHome_chpass"
+o.optional = true
 
-o = s:option(Value, "binpath", translate("Bin Path"), translate("AdGuardHome Bin path if no bin will auto download"))
+-- wait net on boot
+o = s:taboption("basic", Flag, "waitonboot", translate("Start up only when the network is normal"))
+o.default = 1
+o.optional = false
+
+---- Core Settings ----
+s:tab("core", translate("Core Settings"))
+
+o = s:taboption("core",Value, "binpath", translate("Bin Path"), translate("AdGuardHome Bin path if no bin will auto download"))
 o.default     = "/usr/bin/AdGuardHome"
 o.datatype = "string"
 o.optional = false
@@ -87,7 +105,7 @@ end
 return value
 end
 --- upx
-o = s:option(ListValue, "upxflag", translate("use upx to compress bin after download"))
+o = s:taboption("core",ListValue, "upxflag", translate("use upx to compress bin after download"))
 o:value("", translate("none"))
 o:value("-1", translate("compress faster"))
 o:value("-9", translate("compress better"))
@@ -98,7 +116,7 @@ o.default     = ""
 o.description=translate("bin use less space,but may have compatibility issues")
 o.rmempty = true
 ---- config path
-o = s:option(Value, "configpath", translate("Config Path"), translate("AdGuardHome config path"))
+o = s:taboption("core",Value, "configpath", translate("Config Path"), translate("AdGuardHome config path"))
 o.default     = "/etc/AdGuardHome.yaml"
 o.datatype    = "string"
 o.optional = false
@@ -119,7 +137,7 @@ end
 return value
 end
 ---- work dir
-o = s:option(Value, "workdir", translate("Work dir"), translate("AdGuardHome work dir include rules,audit log and database"))
+o = s:taboption("core",Value, "workdir", translate("Work dir"), translate("AdGuardHome work dir include rules,audit log and database"))
 o.default     = "/etc/AdGuardHome"
 o.datatype = "string"
 o.optional = false
@@ -141,7 +159,7 @@ else
 end
 end
 ---- log file
-o = s:option(Value, "logfile", translate("Runtime log file"), translate("AdGuardHome runtime Log file if 'syslog': write to system log;if empty no log"))
+o = s:taboption("core",Value, "logfile", translate("Runtime log file"), translate("AdGuardHome runtime Log file if 'syslog': write to system log;if empty no log"))
 o.datatype    = "string"
 o.rmempty = true
 o.validate=function(self, value)
@@ -159,7 +177,7 @@ end
 return value
 end
 ---- debug
-o = s:option(Flag, "verbose", translate("Verbose log"))
+o = s:taboption("core",Flag, "verbose", translate("Verbose log"))
 o.default = 0
 o.optional = true
 ---- gfwlist
@@ -169,32 +187,12 @@ a="Added"
 else
 a="Not added"
 end
-o=s:option(Button,"gfwdel",translate("Del gfwlist"),translate(a))
-o.optional = true
-o.inputtitle=translate("Del")
-o.write=function()
-	luci.sys.exec("sh /usr/share/AdGuardHome/gfw2adg.sh del 2>&1")
-	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
-end
-o=s:option(Button,"gfwadd",translate("Add gfwlist"),translate(a))
-o.optional = true
-o.inputtitle=translate("Add")
-o.write=function()
-	luci.sys.exec("sh /usr/share/AdGuardHome/gfw2adg.sh 2>&1")
-	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
-end
-o = s:option(Value, "gfwupstream", translate("Gfwlist upstream dns server"), translate("Gfwlist domain upstream dns service")..translate(a))
-o.default     = "tcp://208.67.220.220:5353"
-o.datatype    = "string"
-o.optional = true
----- chpass
-o = s:option(Value, "hashpass", translate("Change browser management password"), translate("Press load culculate model and culculate finally save/apply"))
-o.default     = ""
-o.datatype    = "string"
-o.template = "AdGuardHome/AdGuardHome_chpass"
-o.optional = true
+
+---- Backup Settings ----
+s:tab("other", translate("Other Settings"))
+
 ---- upgrade protect
-o = s:option(MultiValue, "upprotect", translate("Keep files when system upgrade"))
+o = s:taboption("other", DynamicList,  "upprotect", translate("Keep files when system upgrade"))
 o:value("$binpath",translate("core bin"))
 o:value("$configpath",translate("config file"))
 o:value("$logfile",translate("log file"))
@@ -205,14 +203,11 @@ o:value("$workdir/data/filters",translate("filters"))
 o.widget = "checkbox"
 o.default = nil
 o.optional=true
----- wait net on boot
-o = s:option(Flag, "waitonboot", translate("On boot when network ok restart"))
-o.default = 1
-o.optional = true
+
 ---- backup workdir on shutdown
 local workdir=uci:get("AdGuardHome","AdGuardHome","workdir") or "/etc/AdGuardHome"
-o = s:option(MultiValue, "backupfile", translate("Backup workdir files when shutdown"))
-o1 = s:option(Value, "backupwdpath", translate("Backup workdir path"))
+o = s:taboption("other",MultiValue, "backupfile", translate("Backup workdir files when shutdown"))
+o1 = s:taboption("other",Value, "backupwdpath", translate("Backup workdir path"))
 local name
 o:value("filters","filters")
 o:value("stats.db","stats.db")
@@ -255,22 +250,73 @@ else
 end
 end
 
-----Crontab
-o = s:option(MultiValue, "crontab", translate("Crontab task"),translate("Please change time and args in crontab"))
-o:value("autoupdate",translate("Auto update core"))
-o:value("cutquerylog",translate("Auto tail querylog"))
-o:value("cutruntimelog",translate("Auto tail runtime log"))
-o:value("autohost",translate("Auto update ipv6 hosts and restart adh"))
-o:value("autogfw",translate("Auto update gfwlist and restart adh"))
+---- Crontab Settings ----
+
+o = s:taboption("other",MultiValue, "crontab", translate("Crontab task"),translate("Please change time and args in crontab"))
+o:value("autohost",translate("Auto update ipv6 hosts and restart AdGuardHome"))
+o:value("autogfw",translate("Auto update gfwlist and restart AdGuardHome"))
+o:value("autogfwipset",translate("Auto update ipset list and restart AdGuardHome"))
 o.widget = "checkbox"
 o.default = nil
-o.optional=true
-
-o = s:option(Value, "update_url", translate("Core Update URL"))
-o.default = "https://github.com/AdguardTeam/AdGuardHome/releases/download/${Cloud_Version}/AdGuardHome_linux_${Arch}.tar.gz"
-o.placeholder = "https://github.com/AdguardTeam/AdGuardHome/releases/download/${Cloud_Version}/AdGuardHome_linux_${Arch}.tar.gz"
-o.rmempty = false
 o.optional = false
+
+---- GFWList Settings ----
+local a
+if fs.access(configpath) then
+a=luci.sys.call("grep -m 1 -q programadd "..configpath)
+else
+a=1
+end
+if (a==0) then
+a="Added"
+else
+a="Not added"
+end
+
+o=s:taboption("other", Button,"gfwdel",translate("Del gfwlist"),translate(a))
+o.optional = false
+o.inputtitle=translate("Del")
+o.write=function()
+	luci.sys.exec("sh /usr/share/AdGuardHome/gfw2adg.sh del 2>&1")
+	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
+end
+o=s:taboption("other", Button,"gfwadd",translate("Add gfwlist"),translate(a))
+o.optional = false
+o.inputtitle=translate("Add")
+o.write=function()
+	luci.sys.exec("sh /usr/share/AdGuardHome/gfw2adg.sh 2>&1")
+	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
+end
+if fs.access(configpath) then
+a=luci.sys.call("grep -m 1 -q ipset.txt "..configpath)
+else
+a=1
+end
+if (a==0) then
+a="Added"
+else
+a="Not added"
+end
+o=s:taboption("other", Button,"gfwipsetdel",translate("Del gfwlist").." "..translate("(ipset only)"),translate(a))
+o.optional = false
+o.inputtitle=translate("Del")
+o.write=function()
+	luci.sys.exec("sh /usr/share/AdGuardHome/gfwipset2adg.sh del 2>&1")
+	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
+end
+o=s:taboption("other", Button," ",translate("Add gfwlist").." "..translate("(ipset only)"),translate(a).." "..translate("will set to name gfwlist"))
+o.optional = false
+o.inputtitle=translate("Add")
+o.write=function()
+	luci.sys.exec("sh /usr/share/AdGuardHome/gfwipset2adg.sh 2>&1")
+	luci.http.redirect(luci.dispatcher.build_url("admin","services","AdGuardHome"))
+end
+o = s:taboption("other", Value, "gfwupstream", translate("Gfwlist upstream dns server"), translate("Gfwlist domain upstream dns service")..translate(a))
+o.default     = "tcp://208.67.220.220:5353"
+o.datatype    = "string"
+o.optional = false
+
+fs.writefile("/var/run/AdG_log_pos","0")
 
 function m.on_commit(map)
 	if (fs.access("/var/run/AdGserverdis")) then
