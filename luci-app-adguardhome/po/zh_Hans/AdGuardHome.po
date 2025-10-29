@@ -1,6 +1,4 @@
 
-msgid "Base Setting"
-msgstr "基础设置"
 
 msgid "Log"
 msgstr "日志"
@@ -230,11 +228,14 @@ msgstr "自动截短查询日志"
 msgid "Auto tail runtime log"
 msgstr "自动截短运行日志"
 
-msgid "Auto update ipv6 hosts and restart adh"
-msgstr "自动更新ipv6主机并重启adh"
+msgid "Auto update ipv6 hosts and restart AdGuardHome"
+msgstr "自动更新ipv6主机并重启AdGuardHome"
 
-msgid "Auto update gfwlist and restart adh"
-msgstr "自动更新gfw列表并重启adh"
+msgid "Auto update gfwlist and restart AdGuardHome"
+msgstr "自动更新gfw列表并重启AdGuardHome"
+
+msgid "Auto update ipset list and restart AdGuardHome"
+msgstr "自动更新ipset列表并重启AdGuardHome"
 
 msgid "Please change time and args in crontab"
 msgstr "请在计划任务中修改时间和参数"
@@ -284,14 +285,17 @@ msgstr "系统升级时保留数据"
 msgid "Start up only when the network is normal"
 msgstr "开机网络正常才启动"
 
-msgid "Other Settings"
+msgid "Main Config"
+msgstr "主要设置"
+
+msgid "Other Config"
 msgstr "其它设置"
 
-msgid ""
-msgstr ""
+msgid "Core Config"
+msgstr "内核设置"
 
-msgid ""
-msgstr ""
+msgid "will set to name gfwlist"
+msgstr "将设置为gfwlist名称"
 
 msgid ""
 msgstr ""

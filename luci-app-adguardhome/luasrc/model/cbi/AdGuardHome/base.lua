@@ -16,7 +16,7 @@ s.anonymous=true
 s.addremove=false
 
 ---- Basic Settings ----
-s:tab("basic", translate("Basic Settings"))
+s:tab("basic", translate("Main Config"))
 
 o = s:taboption("basic", Flag, "enabled", translate("Enable"))
 o.default = 0
@@ -62,7 +62,6 @@ local port=luci.sys.exec("grep -A 5 '^dns:' "..configpath.." | grep 'port:' | aw
 if (port=="") then port="?" end
 
 o = s:taboption("basic", ListValue, "redirect", port..translate("Redirect"), translate("AdGuardHome redirect mode"))
-o.placeholder = "none"
 o:value("none", translate("none"))
 o:value("dnsmasq-upstream", translate("Run as dnsmasq upstream server"))
 o:value("redirect", translate("Redirect 53 port to AdGuardHome"))
@@ -82,7 +81,7 @@ o.default = 1
 o.optional = false
 
 ---- Core Settings ----
-s:tab("core", translate("Core Settings"))
+s:tab("core", translate("Core Config"))
 
 o = s:taboption("core",Value, "binpath", translate("Bin Path"), translate("AdGuardHome Bin path if no bin will auto download"))
 o.default     = "/usr/bin/AdGuardHome"
@@ -189,7 +188,7 @@ a="Not added"
 end
 
 ---- Backup Settings ----
-s:tab("other", translate("Other Settings"))
+s:tab("other", translate("Other Config"))
 
 ---- upgrade protect
 o = s:taboption("other", DynamicList,  "upprotect", translate("Keep files when system upgrade"))
